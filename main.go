@@ -58,4 +58,5 @@ func main() {
 	config := config.LoadConfig()
 	app := server.NewApp()
 	app.Runserver(config.Port)
+
 }
