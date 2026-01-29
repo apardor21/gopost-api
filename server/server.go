@@ -1,8 +1,9 @@
 package server
 
 import (
-	"log"
+	"fmt"
 	"net/http"
+	"strings"
 )
 
 type App struct {
@@ -18,11 +19,33 @@ func NewApp() *App {
 }
 
 func (app *App) Runserver(port string) error {
+
+	app.printBanner(port)
+
 	server := &http.Server{
 		Addr:    port,
 		Handler: app.mux,
 	}
-	log.Printf("Run server: http://localhost%s\n", port)
+
 	return server.ListenAndServe()
 
+}
+
+func (app *App) printBanner(port string) {
+	urlBase := fmt.Sprintf("http://localhost%s", port)
+	handlerCount := fmt.Sprintf("Handller .........: %d", app.handlerCount)
+
+	fmt.Println("========================================")
+	fmt.Printf("|%s|\n", textCenter("My Server v1.0.0", 51))
+	fmt.Printf("|%s|\n", textCenter(urlBase, 51))
+	fmt.Printf("|%s|\n", strings.Repeat(" ", 51))
+	fmt.Printf("|%s|\n", textCenter(handlerCount, 51))
+	fmt.Println("========================================")
+}
+func textCenter(text string, width int) string {
+	if len(text) >= width {
+		return text[:width]
+	}
+	padding := (width - len(text)) / 2
+	return strings.Repeat(" ", padding) + text + strings.Repeat(" ", width-len(text)-padding)
 }

@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"encoding/json"
+	"gopost-api/server"
 	"net/http"
 	"strconv"
 )
@@ -18,51 +18,45 @@ var posts = []Post{}
 var idCounter = 1
 
 // GetPosts maneja la obtención de todos los posts
-func GetPosts(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	err := json.NewEncoder(w).Encode(posts)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-
+func GetPosts(c *server.Context) {
+	error := c.JSON(http.StatusOK, posts)
+	if error != nil {
+		http.Error(c.Rwrite, error.Error(), http.StatusInternalServerError)
 	}
 }
 
 // CreatePost maneja la creación de un nuevo post
-func CreatePost(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+func CreatePost(c *server.Context) {
 
 	var newPost Post
-	err := json.NewDecoder(r.Body).Decode(&newPost)
+	err := c.BindJSON(newPost)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(c.Rwrite, "Error al decodificar Json", http.StatusBadRequest)
 		return
 	}
 	// asignar los nuevos valores al post
 	newPost.ID = idCounter
 	idCounter++
 	posts = append(posts, newPost)
-	w.WriteHeader(http.StatusCreated)
-	err = json.NewEncoder(w).Encode(newPost)
+
+	err = c.JSON(http.StatusCreated, newPost)
 
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(c.Rwrite, "Error al codificar Json", http.StatusBadRequest)
 		return
 	}
 
 }
 
-func GetPostByID(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
+func GetPostByID(c *server.Context) {
 
-	idStr := r.PathValue("id")
+	idStr := c.Request.PathValue("id")
 	id, _ := strconv.Atoi(idStr)
 	for _, post := range posts {
 		if post.ID == id {
-			w.WriteHeader(http.StatusOK)
-			json.NewEncoder(w).Encode(post)
+			c.JSON(http.StatusOK, post)
 			return
 		}
 	}
-	http.Error(w, "Post not found", http.StatusNotFound)
+	http.Error(c.Rwrite, "Post not found", http.StatusNotFound)
 }
